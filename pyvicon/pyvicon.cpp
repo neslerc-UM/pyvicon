@@ -576,7 +576,25 @@ extern "C" {
     // Output_GetDeviceName  GetDeviceName( const unsigned int DeviceIndex ) const;
     // Output_GetDeviceOutputCount GetDeviceOutputCount( const String  & DeviceName ) const;
     // Output_GetDeviceOutputName GetDeviceOutputName( const String  & DeviceName, const unsigned int   DeviceOutputIndex ) const;
-    // Output_GetDeviceOutputValue GetDeviceOutputValue( const String & DeviceName, const String & DeviceOutputName ) const;
+    
+    // Output_GetDeviceOutputValue GetDeviceOutputValue( const String & DeviceName, const String & DeviceOutputName ) const;    
+    //Build PyObject for GetDeviceOutputValue
+    static PyObject* pyvicon_get_device_output_value(PyObject* self, PyObject* args) {
+        PyObject* capsule;
+        char* subject_name;
+        // char* segment_name;
+        if (!PyArg_ParseTuple(args, "Oss", &capsule, &subject_name, &segment_name)) return NULL;
+        Client* client = (Client*)PyCapsule_GetPointer(capsule, "pyvicon.client");
+
+        // // Watch out with Vicon's custom string memory management!!!!
+        // Output_GetSegmentGlobalRotationEulerXYZ out = client->GetSegmentGlobalRotationEulerXYZ(subject_name, segment_name);
+        Output_GetDeviceOutputValue out = client->GetDeviceOutputValue(device_name, device_output_name, device_output_component_name);
+
+        if(out.Result != Result::Success) {
+            Py_RETURN_NONE;
+        }
+        return Py_BuildValue("d", out.Value[0]);
+    }
     // Output_GetDeviceOutputSubsamples GetDeviceOutputSubsamples( const String & DeviceName, const String & DeviceOutputName ) const;
     // Output_GetDeviceOutputValue GetDeviceOutputValue( const String & DeviceName, const String & DeviceOutputName, const unsigned int Subsample ) const;
     // Output_GetForcePlateCount GetForcePlateCount() const;
@@ -693,6 +711,7 @@ extern "C" {
          {"pyvicon_get_unlabeled_marker_global_translation", pyvicon_get_unlabeled_marker_global_translation, METH_VARARGS, "Return the position of unlabeled markers"},
          {"pyvicon_get_camera_count", pyvicon_get_camera_count, METH_VARARGS, "Get camera count"},
          {"pyvicon_get_camera_name", pyvicon_get_camera_name, METH_VARARGS, "Get camera name"},
+         {"pyvicon_get_device_output_value",pyvicon_get_device_output_value,METH_VARARGS,"Get Forceplate Component"}
          {NULL, NULL, 0, NULL}
     };
 
